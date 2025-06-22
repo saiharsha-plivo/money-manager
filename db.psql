@@ -1,0 +1,40 @@
+Table users {
+	id int [primary key]
+	username varchar [not null]
+	email varchar [unique]
+  role varchar [default: "user"]
+	hash_password varchar
+	verified bool 
+	created_at datetime
+}
+
+Table accounts {
+	id int [primary key]
+	name varchar [not null]
+  description varchar
+	user_id int 
+}
+
+Table records {
+	id int [primary key]
+	account_id int [not null]
+	amount int [not null] 
+	description varchar
+	created_at datetime 
+	currency_id int [not null]
+  type_id int [not null]
+}
+
+Table comments {
+	id int [primary key]
+	description varchar [not null]
+	record_id int [not null]
+	created_at datetime
+}
+
+
+Ref user_accounts: accounts.user_id > users.id
+
+Ref records : records.account_id > accounts.id
+
+Ref comments : comments.record_id > records.id
