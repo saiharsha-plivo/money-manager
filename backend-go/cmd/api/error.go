@@ -52,6 +52,11 @@ func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *htt
 	app.errorResponse(w, r, http.StatusUnauthorized, message)
 }
 
+func (app *application) usernotFound(w http.ResponseWriter, r *http.Request) {
+	message := "no user with this email found"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
 // invalidAuthenticationTokenResponse sends a JSON-formatted error with a 401 Unauthorized status
 // code and "WWW-Authenticate: Bearer" header to the client.
 func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {

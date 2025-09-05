@@ -52,11 +52,11 @@ func (app *application) VerifyUser(next http.Handler) http.Handler {
 			return
 		}
 
-		app.logger.PrintDebug(fmt.Sprintf("user from jwt decode : %v", user), nil)
+		// app.logger.PrintDebug(fmt.Sprintf("user from jwt decode : %v", user), nil)
 		r = app.contextSetUser(r, user)
 
-		app.logger.PrintDebug(fmt.Sprintf("context set in request: %v", app.contextGetUser(r)), nil)
-		app.logger.PrintDebug(fmt.Sprintf("request after adding context: %v", *r), nil)
+		// app.logger.PrintDebug(fmt.Sprintf("context set in request: %v", app.contextGetUser(r)), nil)
+		// app.logger.PrintDebug(fmt.Sprintf("request after adding context: %v", *r), nil)
 
 		next.ServeHTTP(w, r)
 	})

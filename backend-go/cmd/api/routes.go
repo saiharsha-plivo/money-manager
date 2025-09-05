@@ -25,6 +25,11 @@ func (app *application) router() *chi.Mux {
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(app.RequireRole("admin"))
 			r.Patch("/role", app.ChangeUserRole)
+			r.Get("/currencies", app.GetAllCurrencies)
+			r.Post("/currencies", app.InsertCurrency)
+			r.Get("/currencies/{id}", app.GetCurrency)
+			r.Patch("/currencies/{id}", app.UpdateCurrency)
+			r.Delete("/currencies/{id}", app.DeleteCurrency)
 		})
 	})
 

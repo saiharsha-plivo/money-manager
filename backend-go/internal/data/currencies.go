@@ -22,8 +22,12 @@ type Currency struct {
 	Version   int64     `json:"version"`
 }
 
+var (
+	ErrDuplicateCurrency = errors.New("duplicate currency")
+)
+
 func (c *CurrencyModel) GetAll() ([]*Currency, error) {
-	query := `SELECT id, name, rate FROM currencies`
+	query := `SELECT id, name, rate, created_at, version FROM currencies`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -34,11 +38,11 @@ func (c *CurrencyModel) GetAll() ([]*Currency, error) {
 	}
 	defer rows.Close()
 
-	var currencies []*Currency
+	currencies := []*Currency{}
 
 	for rows.Next() {
 		var cur Currency
-		err := rows.Scan(&cur.ID, &cur.Name, &cur.Rate)
+		err := rows.Scan(&cur.ID, &cur.Name, &cur.Rate, &cur.CreatedAt, &cur.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -52,11 +56,11 @@ func (c *CurrencyModel) GetAll() ([]*Currency, error) {
 	return currencies, nil
 }
 
-func (c *CurrencyModel) GetByName(name string) (*Currency, error) {
+func (c *CurrencyModel) GetByID(id int64) (*Currency, error) {
 	query := `
-		SELECT id, name, rate 
+		SELECT id, name, rate, version, created_at 
 		FROM currencies 
-		WHERE name = $1
+		WHERE id = $1
 		`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -64,9 +68,10 @@ func (c *CurrencyModel) GetByName(name string) (*Currency, error) {
 
 	var currency Currency
 
-	err := c.DB.QueryRowContext(ctx, query, name).Scan(currency.ID, currency.Name, currency.Rate)
+	err := c.DB.QueryRowContext(ctx, query, id).Scan(&currency.ID, &currency.Name, &currency.Rate, &currency.Version, &currency.CreatedAt)
 
 	if err != nil {
+		c.ErrorLog.Print(err.Error())
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrRecordNotFound
@@ -80,40 +85,52 @@ func (c *CurrencyModel) GetByName(name string) (*Currency, error) {
 func (c *CurrencyModel) Insert(currency *Currency) error {
 	query := `
 		INSERT INTO currencies (name , rate)
-		VALUES ($1 $2)
-		RETURNING id, created_at,version 
+		VALUES ($1 , $2)
+		RETURNING id, created_at, version 
 		`
+
+	args := []interface{}{currency.Name,
+		currency.Rate}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := c.DB.QueryRowContext(ctx, query, []interface{}{
-		currency.Name,
-		currency.Rate,
-	}).Scan(&currency.ID, &currency.CreatedAt, &currency.Version)
+	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&currency.ID, &currency.CreatedAt, &currency.Version)
 
-	return err
+	if err != nil {
+		c.ErrorLog.Print(err)
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "currencies_name_key"`:
+			return ErrDuplicateCurrency
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *CurrencyModel) Update(currency *Currency) error {
 	query := `
 		UPDATE currencies 
-		SET name=$1, rate=$2, version= version+1
-		WHERE id=$3, version=$4
+		SET name=$1, rate=$2, version=version+1
+		WHERE id=$3 AND version=$4
 		RETURNING version 
 		`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := c.DB.QueryRowContext(ctx, query, []interface{}{
+	args := []interface{}{
 		currency.Name,
 		currency.Rate,
 		currency.ID,
 		currency.Version,
-	}).Scan(&currency.Version)
+	}
+
+	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&currency.Version)
 
 	if err != nil {
+		c.ErrorLog.Print(err.Error())
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrEditConflict

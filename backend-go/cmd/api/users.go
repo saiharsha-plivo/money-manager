@@ -91,7 +91,7 @@ func (app *application) UserLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			app.invalidCredentialsResponse(w, r)
+			app.usernotFound(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}

@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var maxBytes int64 = 1_048_576
@@ -76,4 +79,15 @@ func WriteJSON(w http.ResponseWriter, status int, data Envelope, headers http.He
 		return err
 	}
 	return nil
+}
+
+func ReadIDParam(r *http.Request) (int64, error) {
+	idStr := chi.URLParam(r, "id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id < 1 {
+		return 0, errors.New("invalid id parameter")
+	}
+
+	return id, nil
 }

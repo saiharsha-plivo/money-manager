@@ -39,7 +39,7 @@ func main() {
 	flag.IntVar(&config.port, "port", 8080, "API server port")
 	flag.StringVar(&config.logLevel, "loglevel", "info", "log level for the application can be one of debug | info | error")
 	flag.StringVar(&config.environment, "environment", "development", "env type development | production")
-	flag.StringVar(&config.debugLevel, "debug level", "INFO", "Options can be DEBUG, INFO, ERROR, FATAL, OFF level from lowest to highest")
+	flag.StringVar(&config.debugLevel, "debuglevel", "INFO", "Options can be DEBUG, INFO, ERROR, FATAL, OFF level from lowest to highest")
 	flag.StringVar(&config.secretKey, "SecretKey", "cna)sjsh373*$#%hdgd", "Secret Key for generating json tokens")
 	pw := os.Getenv("DATABASE_PASSWORD")
 	flag.StringVar(&config.db.dsn, "db-dsn", fmt.Sprintf("postgres://moneymanager:%s@localhost:5432/moneymanager?sslmode=disable", pw), "PostgreSQL DSN")
