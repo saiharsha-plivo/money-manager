@@ -15,8 +15,9 @@ var (
 
 // Models struct is a single convenient container to hold and represent all our database models.
 type Models struct {
-	Users      UserModel
-	Currencies CurrencyModel
+	Users       UserModel
+	Currencies  CurrencyModel
+	RecordTypes RecordTypeModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -29,6 +30,11 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		Currencies: CurrencyModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
+		RecordTypes: RecordTypeModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,

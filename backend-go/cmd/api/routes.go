@@ -30,6 +30,11 @@ func (app *application) router() *chi.Mux {
 			r.Get("/currencies/{id}", app.GetCurrency)
 			r.Patch("/currencies/{id}", app.UpdateCurrency)
 			r.Delete("/currencies/{id}", app.DeleteCurrency)
+
+			r.Get("/recordtypes", app.GetAllRecordTypes)
+			r.Post("/recordtypes", app.InsertRecordType)
+			r.Get("/recordtypes/{id}", app.GetRecordType)
+			r.Delete("/recordtypes/{id}", app.DeleteRecordType)
 		})
 	})
 
