@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/saiharsha/money-manager/pkg/validator"
 )
 
 var maxBytes int64 = 1_048_576
@@ -90,4 +92,42 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func ReadStringParam(r *http.Request, key string, defaultValue string) string {
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func ReadIntParam(r *http.Request, key string, defaultValue int, v *validator.Validator) int {
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		return defaultValue
+	}
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		v.AddError(key, "invalid int parameter")
+		return 0
+	}
+	return intValue
+}
+
+func ReadTimeParam(r *http.Request, key string, defaultValue time.Time, isDefault bool, v *validator.Validator) time.Time {
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		if isDefault {
+			return defaultValue
+		}
+		return time.Time{}
+	}
+
+	timeValue, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		v.AddError(key, "invalid time parameter")
+		return time.Time{}
+	}
+	return timeValue
 }

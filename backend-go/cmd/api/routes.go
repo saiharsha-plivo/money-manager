@@ -20,21 +20,31 @@ func (app *application) router() *chi.Mux {
 		r.Post("/refresh", app.UserRefresh)
 	})
 
+	// records
+	r.Route("/records", func(r chi.Router) {
+		r.Use(app.VerifyUser)
+		r.Get("/", app.listRecordsHandler)
+		r.Post("/", app.createRecordHandler)
+		r.Get("/{id}", app.getRecordHandler)
+		r.Patch("/{id}", app.updateRecordHandler)
+		r.Delete("/{id}", app.deleteRecordHandler)
+	})
+
 	r.Group(func(r chi.Router) {
 		r.Use(app.VerifyUser)
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(app.RequireRole("admin"))
-			r.Patch("/role", app.ChangeUserRole)
-			r.Get("/currencies", app.GetAllCurrencies)
-			r.Post("/currencies", app.InsertCurrency)
-			r.Get("/currencies/{id}", app.GetCurrency)
-			r.Patch("/currencies/{id}", app.UpdateCurrency)
-			r.Delete("/currencies/{id}", app.DeleteCurrency)
+			r.Patch("/role", app.UpdateUserRoleHandler)
+			r.Get("/currencies", app.GetCurrenciesHandler)
+			r.Post("/currencies", app.InsertCurrencyHandler)
+			r.Get("/currencies/{id}", app.GetCurrencyHandler)
+			r.Patch("/currencies/{id}", app.UpdateCurrencyHandler)
+			r.Delete("/currencies/{id}", app.DeleteCurrencyHandler)
 
-			r.Get("/recordtypes", app.GetAllRecordTypes)
-			r.Post("/recordtypes", app.InsertRecordType)
-			r.Get("/recordtypes/{id}", app.GetRecordType)
-			r.Delete("/recordtypes/{id}", app.DeleteRecordType)
+			r.Get("/recordtypes", app.GetRecordTypesHandler)
+			r.Post("/recordtypes", app.InsertRecordTypeHandler)
+			r.Get("/recordtypes/{id}", app.GetRecordTypeHandler)
+			r.Delete("/recordtypes/{id}", app.DeleteRecordTypeHandler)
 		})
 	})
 

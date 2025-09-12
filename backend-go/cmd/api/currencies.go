@@ -10,7 +10,7 @@ import (
 	"github.com/saiharsha/money-manager/pkg/validator"
 )
 
-func (app *application) GetAllCurrencies(w http.ResponseWriter, r *http.Request) {
+func (app *application) GetCurrenciesHandler(w http.ResponseWriter, r *http.Request) {
 	currencies, err := app.models.Currencies.GetAll()
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -27,7 +27,7 @@ func (app *application) GetAllCurrencies(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (app *application) InsertCurrency(w http.ResponseWriter, r *http.Request) {
+func (app *application) InsertCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	var currency data.Currency
 
 	err := jsonhelper.ReadJSON(w, r, &currency)
@@ -65,7 +65,7 @@ func (app *application) InsertCurrency(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) DeleteCurrency(w http.ResponseWriter, r *http.Request) {
+func (app *application) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := jsonhelper.ReadIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -89,7 +89,7 @@ func (app *application) DeleteCurrency(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) GetCurrency(w http.ResponseWriter, r *http.Request) {
+func (app *application) GetCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := jsonhelper.ReadIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -119,7 +119,7 @@ func (app *application) GetCurrency(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) UpdateCurrency(w http.ResponseWriter, r *http.Request) {
+func (app *application) UpdateCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := jsonhelper.ReadIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)

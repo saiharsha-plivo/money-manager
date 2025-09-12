@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS comments (
+    id SERIAL PRIMARY KEY,
+    record_id INT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE comments ADD CONSTRAINT fk_comments_records FOREIGN KEY (record_id) REFERENCES records (id);

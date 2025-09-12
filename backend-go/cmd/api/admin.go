@@ -18,7 +18,7 @@ const (
 	RoleSuperUser Role = "superuser"
 )
 
-func (app *application) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
+func (app *application) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email string `json:"email"`
 		Role  Role   `json:"role"`

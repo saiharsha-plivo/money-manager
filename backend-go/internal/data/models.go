@@ -18,6 +18,8 @@ type Models struct {
 	Users       UserModel
 	Currencies  CurrencyModel
 	RecordTypes RecordTypeModel
+	Records     RecordModel
+	Comments    CommentModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -35,6 +37,16 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		RecordTypes: RecordTypeModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
+		Records: RecordModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
+		Comments: CommentModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,

@@ -9,7 +9,7 @@ import (
 	"github.com/saiharsha/money-manager/pkg/validator"
 )
 
-func (app *application) GetAllRecordTypes(w http.ResponseWriter, r *http.Request) {
+func (app *application) GetRecordTypesHandler(w http.ResponseWriter, r *http.Request) {
 	recordtypes, err := app.models.RecordTypes.GetAll()
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -26,7 +26,7 @@ func (app *application) GetAllRecordTypes(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (app *application) InsertRecordType(w http.ResponseWriter, r *http.Request) {
+func (app *application) InsertRecordTypeHandler(w http.ResponseWriter, r *http.Request) {
 	var recordtype data.RecordType
 
 	err := jsonhelper.ReadJSON(w, r, &recordtype)
@@ -59,7 +59,7 @@ func (app *application) InsertRecordType(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (app *application) DeleteRecordType(w http.ResponseWriter, r *http.Request) {
+func (app *application) DeleteRecordTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := jsonhelper.ReadIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -83,7 +83,7 @@ func (app *application) DeleteRecordType(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (app *application) GetRecordType(w http.ResponseWriter, r *http.Request) {
+func (app *application) GetRecordTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := jsonhelper.ReadIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
