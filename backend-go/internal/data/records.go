@@ -23,6 +23,7 @@ type Record struct {
 	Description string    `json:"description"`
 	TypeID      int64     `json:"type_id"`
 	CurrencyID  int64     `json:"currency_id"`
+	UserID      int64     `json:"user_id"`
 	CreatedAt   time.Time `json:"created_at"`
 	Version     int64     `json:"version"`
 }
@@ -33,15 +34,15 @@ var (
 
 func (r *RecordModel) Insert(record *Record) error {
 	query := `
-		INSERT INTO records (amount, description, type_id, currency_id)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO records (amount, description, type_id, currency_id, user_id)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, version
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	args := []interface{}{record.Amount, record.Description, record.TypeID, record.CurrencyID}
+	args := []interface{}{record.Amount, record.Description, record.TypeID, record.CurrencyID, record.UserID}
 
 	err := r.DB.QueryRowContext(ctx, query, args...).Scan(&record.ID, &record.CreatedAt, &record.Version)
 	if err != nil {
@@ -59,7 +60,7 @@ func (r *RecordModel) Insert(record *Record) error {
 
 func (r *RecordModel) GetByID(id int64) (*Record, error) {
 	query := `
-		SELECT id, amount, description, type_id, currency_id, created_at, version
+		SELECT id, amount, description, type_id, currency_id, created_at, version, user_id
 		FROM records
 		WHERE id = $1
 	`
@@ -69,7 +70,7 @@ func (r *RecordModel) GetByID(id int64) (*Record, error) {
 
 	var record Record
 
-	err := r.DB.QueryRowContext(ctx, query, id).Scan(&record.ID, &record.Amount, &record.Description, &record.TypeID, &record.CurrencyID, &record.CreatedAt, &record.Version)
+	err := r.DB.QueryRowContext(ctx, query, id).Scan(&record.ID, &record.Amount, &record.Description, &record.TypeID, &record.CurrencyID, &record.CreatedAt, &record.Version, &record.UserID)
 	if err != nil {
 		r.ErrorLog.Print(err.Error())
 		switch {
@@ -117,14 +118,14 @@ func (r *RecordModel) Update(record *Record) error {
 	query := `
 		UPDATE records
 		SET amount = $1, description = $2, type_id = $3, currency_id = $4, version = version + 1
-		WHERE id = $5 AND version = $6
+		WHERE id = $5 AND version = $6 AND user_id = $7
 		RETURNING version
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	args := []interface{}{record.Amount, record.Description, record.TypeID, record.CurrencyID, record.ID, record.Version}
+	args := []interface{}{&record.Amount, &record.Description, &record.TypeID, &record.CurrencyID, &record.ID, &record.Version, &record.UserID}
 
 	err := r.DB.QueryRowContext(ctx, query, args...).Scan(&record.Version)
 	if err != nil {
@@ -214,4 +215,22 @@ func ValidateRecord(v *validator.Validator, record *Record) {
 	v.Check(record.Amount > 0, "amount", "must be greater than 0")
 	v.Check(record.TypeID > 0, "type_id", "must be provided")
 	v.Check(record.CurrencyID > 0, "currency_id", "must be provided")
+}
+
+func ValidateRecordUpdate(v *validator.Validator, amount *int64, typeID *int64, currencyID *int64) {
+	if amount != nil {
+		v.Check(*amount > 0, "amount", "must be greater than 0")
+	} else {
+		v.AddError("amount", "must be provided")
+	}
+	if typeID != nil {
+		v.Check(*typeID > 0, "type_id", "must be provided")
+	} else {
+		v.AddError("type_id", "must be provided")
+	}
+	if currencyID != nil {
+		v.Check(*currencyID > 0, "currency_id", "must be provided")
+	} else {
+		v.AddError("currency_id", "must be provided")
+	}
 }

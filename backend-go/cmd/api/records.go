@@ -132,12 +132,7 @@ func (app *application) updateRecordHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	v := validator.NewValidator()
-	data.ValidateRecord(v, &data.Record{
-		Amount:      *input.Amount,
-		Description: *input.Description,
-		TypeID:      *input.TypeID,
-		CurrencyID:  *input.CurrencyID,
-	})
+	data.ValidateRecordUpdate(v, input.Amount, input.TypeID, input.CurrencyID)
 
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)

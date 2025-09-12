@@ -56,7 +56,8 @@ func (f Filters) sortColumn() string {
 		}
 	}
 
-	panic("unsafe sort parameter:" + f.Sort)
+	//default by id
+	return "id"
 }
 
 func (f Filters) sortDirection() string {

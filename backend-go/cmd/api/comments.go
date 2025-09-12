@@ -33,7 +33,7 @@ func (app *application) GetCommentsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = jsonhelper.WriteJSON(w, http.StatusOK, jsonhelper.Envelope{"comments": comments}, nil)
+	err = jsonhelper.WriteJSON(w, http.StatusOK, jsonhelper.Envelope{"metadata": filters.CalculateMetadata(len(comments)), "comments": comments}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -93,10 +93,7 @@ func (app *application) UpdateCommentHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	v := validator.NewValidator()
-	data.ValidateComment(v, &data.Comment{
-		Description: *input.Description,
-		RecordID:    *input.RecordID,
-	})
+	data.ValidateCommentUpdate(v, input.Description, input.RecordID)
 
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)

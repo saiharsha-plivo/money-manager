@@ -23,11 +23,20 @@ func (app *application) router() *chi.Mux {
 	// records
 	r.Route("/records", func(r chi.Router) {
 		r.Use(app.VerifyUser)
-		r.Get("/", app.listRecordsHandler)
+		r.Get("/list/{id}", app.listRecordsHandler)
 		r.Post("/", app.createRecordHandler)
 		r.Get("/{id}", app.getRecordHandler)
 		r.Patch("/{id}", app.updateRecordHandler)
 		r.Delete("/{id}", app.deleteRecordHandler)
+	})
+
+	// comments
+	r.Route("/comments", func(r chi.Router) {
+		r.Use(app.VerifyUser)
+		r.Post("/", app.CreateCommentHandler)
+		r.Get("/{id}", app.GetCommentsHandler)      // id is the record id
+		r.Patch("/{id}", app.UpdateCommentHandler)  // id is the record id
+		r.Delete("/{id}", app.DeleteCommentHandler) // id is comment id
 	})
 
 	r.Group(func(r chi.Router) {

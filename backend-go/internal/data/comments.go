@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -138,13 +139,13 @@ func (c *CommentModel) GetByID(id int64) (*Comment, error) {
 }
 
 func (c *CommentModel) GetAll(recordID int64, filters Filters) ([]*Comment, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT id, record_id, description, created_at, version
 		FROM comments
 		WHERE record_id = $1
 		ORDER BY %s %s, id ASC
-		LIMIT $2 OFFSET $3
-	`
+		LIMIT $2 OFFSET $3`,
+		filters.sortColumn(), filters.sortDirection())
 
 	args := []interface{}{recordID, filters.limit(), filters.offset()}
 
@@ -184,6 +185,24 @@ func (c *CommentModel) GetAll(recordID int64, filters Filters) ([]*Comment, erro
 }
 
 func ValidateComment(v *validator.Validator, comment *Comment) {
-	v.Check(comment.Description != "", "description", "must be provided")
-	v.Check(comment.RecordID != 0, "record_id", "must be provided")
+	if comment.Description != "" {
+		v.Check(comment.Description != "", "description", "must be provided")
+	} else {
+		v.AddError("description", "must be provided")
+	}
+	if comment.RecordID != 0 {
+		v.Check(comment.RecordID != 0, "record_id", "must be provided")
+	} else {
+		v.AddError("record_id", "must be provided")
+	}
+}
+
+// ValidateCommentUpdate validates only the fields that are being updated (non-nil)
+func ValidateCommentUpdate(v *validator.Validator, description *string, recordID *int64) {
+	if description != nil {
+		v.Check(*description != "", "description", "must be provided")
+	}
+	if recordID != nil {
+		v.Check(*recordID > 0, "record_id", "must be provided")
+	}
 }
