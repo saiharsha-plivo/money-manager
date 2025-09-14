@@ -7,9 +7,9 @@ import (
 func (app *application) router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(app.RequestLogger)
+	r.Use(app.panicRecover)
 	r.MethodNotAllowed(app.methodNotAllowedResponse)
 
-	// health check
 	r.Get("/", app.healthcheck)
 
 	// account
@@ -18,6 +18,7 @@ func (app *application) router() *chi.Mux {
 		r.Post("/login", app.UserLogin)
 		r.Post("/signout", app.UserSignOut)
 		r.Post("/refresh", app.UserRefresh)
+		r.Get("/verify/{token}", app.UserVerify)
 	})
 
 	// records

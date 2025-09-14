@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/saiharsha/money-manager/internal/data"
 	jsonhelper "github.com/saiharsha/money-manager/pkg/json"
 	"github.com/saiharsha/money-manager/pkg/validator"
@@ -57,7 +58,26 @@ func (app *application) UserSignUp(w http.ResponseWriter, r *http.Request) {
 		app.logger.PrintDebug(fmt.Sprintf("user %v has not been created in database error : %v", user.Name, err.Error()), nil)
 		return
 	}
-	app.logger.PrintDebug(fmt.Sprintf("user %v has been created in database", user.Name), nil)
+	app.logger.PrintInfo(fmt.Sprintf("user %v has been created in database", user.Name), nil)
+
+	token, err := app.CreateToken(user, 3*24*time.Hour)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	verifyLink := fmt.Sprintf("http://%s:%d/users/verify/%s", app.config.host, app.config.port, token)
+
+	app.BackgroundEmailTask(func() {
+		err := app.mailer.SendWelcomeEmail([]string{user.Email}, user.Name, verifyLink)
+		if err != nil {
+			app.logger.PrintError(err, map[string]string{
+				"user_email": user.Email,
+				"operation":  "send_welcome_email",
+			})
+		}
+		app.logger.PrintInfo(fmt.Sprintf("welcome email sent to %v", user.Email), nil)
+	})
 
 	err = jsonhelper.WriteJSON(w, http.StatusAccepted, jsonhelper.Envelope{"user": user}, nil)
 	if err != nil {
@@ -85,7 +105,7 @@ func (app *application) UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.logger.PrintDebug(fmt.Sprintf("email %v has passed intial validation", userdetails.Email), nil)
+	app.logger.PrintInfo(fmt.Sprintf("email %v has passed intial validation", userdetails.Email), nil)
 
 	user, err := app.models.Users.GetUserByMail(userdetails.Email)
 	if err != nil {
@@ -136,6 +156,7 @@ func (app *application) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	envelope := jsonhelper.Envelope{
 		"accesstoken": accesstoken,
+		"user":        user,
 	}
 
 	err = jsonhelper.WriteJSON(w, http.StatusAccepted, envelope, nil)
@@ -196,6 +217,61 @@ func (app *application) UserRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = jsonhelper.WriteJSON(w, http.StatusOK, jsonhelper.Envelope{"user": user, "accesstoken": accesstoken}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *application) UserVerify(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	app.logger.PrintInfo(fmt.Sprintf("token %v has been received", token), nil)
+
+	userdetails, err := app.VerifyToken(token)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	app.logger.PrintInfo(fmt.Sprintf("user %v has been verified", userdetails.Email), nil)
+
+	user, err := app.models.Users.GetUserByMail(userdetails.Email)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.usernotFound(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	user.Activated = true
+	_, err = app.models.Users.UpdateUser(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	app.BackgroundEmailTask(func() {
+		err := app.mailer.SendVerificationEmail([]string{user.Email}, user.Name)
+		if err != nil {
+			app.logger.PrintError(err, map[string]string{
+				"user_email": user.Email,
+				"operation":  "send_verification_email",
+			})
+		}
+		app.logger.PrintInfo(fmt.Sprintf("verification email sent to %v", user.Email), nil)
+	})
+
+	app.logger.PrintInfo(fmt.Sprintf("user %v has been written to the response", user.Name), nil)
+
+	envelope := jsonhelper.Envelope{
+		"message": "user verified",
+		"user":    user,
+	}
+	err = jsonhelper.WriteJSON(w, http.StatusAccepted, envelope, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
